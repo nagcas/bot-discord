@@ -56,28 +56,6 @@ async def earthquake(ctx, arg):
 
 
 @bot.command()
-async def poke(ctx, arg):
-    try:
-        pokemon = arg.split(" ", 1)[0].lower()
-        result = requests.get(f"https://pokeapi.co/api/v2/pokemon/{pokemon}/")
-        if result.text == "Not Found":
-            await ctx.send("Pokemon not found!")
-        else:
-            image_url = result.json()["sprites"]["front_default"]
-            print(image_url)
-            await ctx.send(image_url)
-
-    except Exception as error:
-        print("Error: ", error)
-
-
-@poke.error
-async def error_type(ctx, error):
-    if isinstance(error, commands.errors.MissingRequiredArgument):
-        await ctx.send("Send nombre Pokemon!")
-
-
-@bot.command()
 async def test(ctx, *args):
     response = " ".join(args)
     await ctx.send(response)
@@ -85,13 +63,12 @@ async def test(ctx, *args):
 
 @bot.event
 async def on_ready():
-    print(f"Bot earthquake avviato! {bot.user}")
+    print(f"Earthquake bot started! {bot.user}")
 
 
 @bot.command()
 async def clear(ctx):
     await ctx.channel.purge()
-    await ctx.send("Messaggi cancellati!", delete_after=3)
-
+    await ctx.send("Messages deleted!", delete_after=3)
 
 bot.run(token)
