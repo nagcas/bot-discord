@@ -7,7 +7,8 @@ from dotenv import load_dotenv
 load_dotenv()
 token = os.getenv("TOKEN_DISCORD")
 
-URL_TERRAQUAKEAPI = "https://api.terraquakeapi.com/v1/earthquakes/recent"
+URL_TERRAQUAKEAPI_RECENT = "https://api.terraquakeapi.com/v1/earthquakes/recent"
+URL_TERRAQUAKEAPI_TODAY = "https://api.terraquakeapi.com/v1/earthquakes/today"
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -37,9 +38,13 @@ async def info(ctx):
 
         📌 **Available commands:**
 
-        ➡️ `$earthquake <number>`
-        Shows the latest N seismic events
-        Example: `$earthquake 5`
+        ➡️ `$earthquake recent limit <number>`
+        Returns the latest N earthquake events
+        Example: `$earthquake recent limit 5`
+        
+        ➡️ `$earthquake today limit <number>`
+        Returns the latest N earthquakes recorded today
+        Example: `$earthquake today limit 10`
 
         ➡️ `$test <text>`
         Repeats the input message
@@ -56,10 +61,18 @@ async def info(ctx):
 
 
 @bot.command()
-async def earthquake(ctx, limit: int):
+async def earthquake(ctx, mode: str, limit: int):
     try:
-        response = requests.get(f"{URL_TERRAQUAKEAPI}?limit={limit}", timeout=10)
-
+        if mode == 'recent':
+            url = URL_TERRAQUAKEAPI_RECENT
+        elif mode == 'today':
+            url = URL_TERRAQUAKEAPI_TODAY
+        else:
+            await ctx.send("Invalid mode. Use recent or today")
+            return
+    
+        response = requests.get(f"{url}?limit={limit}", timeout=10)
+        
         if response.status_code != 200:
             await ctx.send("API request error.")
             return
@@ -75,7 +88,7 @@ async def earthquake(ctx, limit: int):
             and "payload" in data
             and isinstance(data["payload"], list)
         ):
-            await ctx.send(f"Latest {limit} seismic events:")
+            await ctx.send(f"{mode} seismic events:")
             if len(data["payload"]) > 0:
                 for event in data["payload"]:
                     props = event.get("properties", {})
