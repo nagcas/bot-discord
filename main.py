@@ -61,8 +61,20 @@ async def info(ctx):
 
 
 @bot.command()
-async def earthquake(ctx, mode: str, limit: int):
+async def earthquake(ctx, *args):
     try:
+        if len(args) != 3:
+            await ctx.send("Usage: $earthquake recent limit 10")
+            return
+
+        mode = args[0]
+        keyword = args[1]
+        limit = int(args[2])
+        
+        if keyword != "limit":
+            await ctx.send("Usage: $earthquake recent limit 10")
+            return
+        
         if mode == 'recent':
             url = URL_TERRAQUAKEAPI_RECENT
         elif mode == 'today':
