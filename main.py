@@ -15,10 +15,49 @@ intents.message_content = True
 bot = commands.Bot(command_prefix="$", intents=intents)
 
 
+@bot.event
+async def on_ready():
+    print(f"Earthquake bot started! {bot.user}")
+
+    channel_id = 1417776031149981707
+    channel = bot.get_channel(channel_id)
+
+    if channel:
+        await channel.send(
+            "🌍 Earthquake Bot is online!\nType `$info` to see available commands."
+        )
+        
+
 @bot.command()
-async def earthquake(ctx, arg):
+async def info(ctx):
+    message = """
+        🌍 **Earthquake Bot - Guide**
+
+        This bot allows you to get information about recent earthquakes.
+
+        📌 **Available commands:**
+
+        ➡️ `$earthquake <number>`
+        Shows the latest N seismic events
+        Example: `$earthquake 5`
+
+        ➡️ `$test <text>`
+        Repeats the input message
+        Example: `$test hello`
+
+        ➡️ `$info`
+        Displays this guide
+
+        ⚙️ **Data source:**
+        TerraQuake API (real-time seismic events) - terraquakeapi.com -
+
+        """
+    await ctx.send(message)
+
+
+@bot.command()
+async def earthquake(ctx, limit: int):
     try:
-        limit = arg.split(" ", 1)[0]
         response = requests.get(f"{URL_TERRAQUAKEAPI}?limit={limit}", timeout=10)
 
         if response.status_code != 200:
@@ -61,14 +100,10 @@ async def test(ctx, *args):
     await ctx.send(response)
 
 
-@bot.event
-async def on_ready():
-    print(f"Earthquake bot started! {bot.user}")
-
-
 @bot.command()
 async def clear(ctx):
     await ctx.channel.purge()
     await ctx.send("Messages deleted!", delete_after=3)
+
 
 bot.run(token)
