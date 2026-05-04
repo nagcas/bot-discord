@@ -55,10 +55,10 @@ pip install -r requirements.txt
 Copia il BOT TOKEN
 ```
 
-### Inserisci il token nel file principale:
+### Inserisci il token nel file .env:
 
 ```bash
-bot.run("YOUR_DISCORD_BOT_TOKEN")
+TOKEN_DISCORD=Inserisci il tuo token discord
 ```
 
 ## 💻 Utilizzo
