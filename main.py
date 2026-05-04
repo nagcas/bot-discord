@@ -96,7 +96,7 @@ async def earthquake(ctx, *args):
             limit = int(args[2])
             
             if keyword != "limit":
-                await ctx.send("Usage: $earthquake (recent or today or last-week) limit 10")
+                await ctx.send("Usage: $earthquake (recent or today or last-week or region) limit 10")
                 return
             
             if mode == "recent":
@@ -112,7 +112,7 @@ async def earthquake(ctx, *args):
                 await ctx.send(f"{mode} seismic events:")
                 
             else:
-                await ctx.send("Invalid mode. Use recent or today or last-week")
+                await ctx.send("Invalid mode. Use recent or today or last-week or region.")
                 return
         
         response = requests.get(url, timeout = 10)
