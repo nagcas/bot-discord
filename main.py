@@ -89,6 +89,7 @@ async def earthquake(ctx, *args):
             keyword = args[1]
             limit = int(args[3])
             url = f"{URL_TERRAQUAKEAPI_REGION}?region={keyword}&limit={limit}"
+            await ctx.send(f"{mode} {keyword} seismic events:")
             
         else:
             keyword = args[1]
@@ -100,12 +101,15 @@ async def earthquake(ctx, *args):
             
             if mode == "recent":
                 url = f"{URL_TERRAQUAKEAPI_RECENT}?limit={limit}"
+                await ctx.send(f"{mode} seismic events:")
                 
             elif mode == "today":
                 url = URL_TERRAQUAKEAPI_TODAY
+                await ctx.send(f"{mode} seismic events:")
                 
             elif mode == "last-week":
                 url = f"{URL_TERRAQUAKEAPI_LAST_WEEK}?limit={limit}"
+                await ctx.send(f"{mode} seismic events:")
                 
             else:
                 await ctx.send("Invalid mode. Use recent or today or last-week")
@@ -130,7 +134,6 @@ async def earthquake(ctx, *args):
             and "payload" in data
             and isinstance(data["payload"], list)
         ):
-            await ctx.send(f"{mode} seismic events:")
             if len(data["payload"]) > 0:
                 for event in data["payload"]:
                     props = event.get("properties", {})
