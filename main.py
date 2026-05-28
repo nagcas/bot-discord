@@ -5,7 +5,6 @@ import difflib
 import requests
 from datetime import datetime
 from dotenv import load_dotenv
-from earthquake_map import plotting
 
 load_dotenv()
 token = os.getenv("TOKEN_DISCORD")
@@ -230,11 +229,6 @@ async def test(ctx, *args):
 async def clear(ctx):
     await ctx.channel.purge()
     await ctx.send("Messages deleted!", delete_after=3)
-
-@bot.command()
-async def plot(ctx):
-    await ctx.send("Plot map")
-    await plotting()
 
 
 @bot.event
