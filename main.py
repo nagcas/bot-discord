@@ -5,6 +5,7 @@ import difflib
 import requests
 from datetime import datetime
 from dotenv import load_dotenv
+from earthquake_map import plotting
 
 load_dotenv()
 token = os.getenv("TOKEN_DISCORD")
@@ -13,6 +14,7 @@ URL_TERRAQUAKEAPI_RECENT = "https://api.terraquakeapi.com/v1/earthquakes/recent"
 URL_TERRAQUAKEAPI_TODAY = "https://api.terraquakeapi.com/v1/earthquakes/today"
 URL_TERRAQUAKEAPI_LAST_WEEK = "https://api.terraquakeapi.com/v1/earthquakes/last-week"
 URL_TERRAQUAKEAPI_REGION = "https://api.terraquakeapi.com/v1/earthquakes/region"
+URL_TERRAQUAKEAPI_EVENT = "https://api.terraquakeapi.com/v1/earthquakes/eventId"
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -44,23 +46,28 @@ async def info(ctx):
 
         ➡️ `$earthquake recent limit <number>`
         This endpoint retrieves all recent seismic events from the beginning of the year until today via the TerraQuake API sorted from the most recent to the least recent.
-        Returns the latest N earthquake events
+        Returns the latest N earthquake events.
         Example: `$earthquake recent limit 5`
         
         ➡️ `$earthquake today limit <number>`
         This endpoint retrieves all seismic events that occurred today (from 00:00 UTC to the current time) from the TerraQuake API.
-        Returns the latest N earthquakes recorded today
+        Returns the latest N earthquakes recorded today.
         Example: `$earthquake today limit 10`
         
         ➡️ `$earthquake last-week limit <number>`
         This endpoint retrieves all seismic events that occurred in the last 7 days from the TerraQuake API.
-        Returns the latest N earthquakes recorded last-week
+        Returns the latest N earthquakes recorded last-week.
         Example: `$earthquake last-week limit 10`
         
         ➡️ `$earthquake region Calabria limit <number>`
         This endpoint retrieves all seismic events that occurred within a specific Italian region from the TerraQuake API, from the start of the current year up to today.
-        Returns the latest N earthquakes recorded region
+        Returns the latest N earthquakes recorded region.
         Example: `$earthquake region Calabria limit 10`
+        
+        ➡️ `$earthquake eventId <number id>`
+        This endpoint retrieves a specific seismic event by its unique event ID from the TerraQuake API.
+        Returns information about a specific earthquake event by event ID.
+        Example: `$earthquake eventId 46060662`
 
         ➡️ `$test <text>`
         Repeats the input message
@@ -70,7 +77,8 @@ async def info(ctx):
         Displays this guide
 
         ⚙️ **Data source:**
-        TerraQuake API (real-time seismic events) - terraquakeapi.com -
+        TerraQuake API (real-time seismic events) - https://terraquakeapi.com -
+        by Gianluca Chiaravalloti
 
         """
     await ctx.send(message)
@@ -79,18 +87,38 @@ async def info(ctx):
 @bot.command()
 async def earthquake(ctx, *args):
     try:
-        if len(args) < 3:
-            await ctx.send("Usage: $earthquake (recent or today or last-week or region) limit 10")
+        if len(args) < 1:
+            await ctx.send("Usage: $earthquake (recent/today/last-week/region/eventId)")
             return
 
         mode = args[0]
         
-        if mode == "region":
+        # Event id
+        if mode == "eventId":
+            
+            if len(args) < 2:
+                await ctx.send("Usage: $earthquake eventId <number id>")
+                return
+        
+            event_id = args[1]
+        
+            url = f"{URL_TERRAQUAKEAPI_EVENT}?eventId={event_id}"
+        
+            await ctx.send(f"Searching seismic event ID {event_id}...")
+        
+        # Region        
+        elif mode == "region":
+            
+            if len(args) > 4:
+                await ctx.send("Usage: $eathquake region Calabria limit 10")
+                return
+            
             keyword = args[1]
             limit = int(args[3])
             url = f"{URL_TERRAQUAKEAPI_REGION}?region={keyword}&limit={limit}"
             await ctx.send(f"{mode} {keyword} seismic events:")
-            
+                
+        # Recent/Today/Last-week  
         else:
             keyword = args[1]
             limit = int(args[2])
@@ -137,8 +165,9 @@ async def earthquake(ctx, *args):
             if len(data["payload"]) > 0:
                 for event in data["payload"]:
                     props = event.get("properties", {})
+                    event_id = props.get("eventId", "N/A")
                     magnitude = props.get("mag", "N/A")
-                    magType = props.get("magType")
+                    magType = props.get("magType", "Unknown")
                     place = props.get("place", "Unknown")
                     time = props.get("time")
                     
@@ -147,10 +176,41 @@ async def earthquake(ctx, *args):
                         formatted_time = dt.strftime("%d/%m/%Y %H:%M")
                     else:
                         formatted_time = "N/A"
+                    
+                    # EXTRA INFO FOR EVENTID
+                    if mode == "eventId":
+                        geometry = event.get("geometry", {})
+                        coordinates = geometry.get("coordinates", [])
+                        
+                        if len(coordinates) >= 3:
+                            lon = coordinates[0]
+                            lat = coordinates[1]
+                            depth = coordinates[2]
+                        else:
+                            lon = "N/A"
+                            lat = "N/A"
+                            depth = "N/A"
 
-                    print("")
-                    print(f"{magnitude}{magType} - {place} - {formatted_time}")
-                    await ctx.send(f"{magnitude}{magType} - {place} - {formatted_time}")
+                        message = (
+                            f"🌍 Event ID: {event_id}\n"
+                            f"📍 Place: {place}\n"
+                            f"📏 Magnitude: {magnitude}{magType}\n"
+                            f"📌 Depth: {depth} km\n"
+                            f"🧭 Coordinates: lat -> {lat}, lon -> {lon}\n"
+                            f"🕒 Time: {formatted_time}"
+                        )
+
+                    else:
+
+                        message = (
+                            f"Event id: {event_id} - "
+                            f"{magnitude}{magType} - "
+                            f"{place} - "
+                            f"{formatted_time}"
+                        )
+
+                    await ctx.send(message)
+
             else:
                 await ctx.send("No earthquake data found.")
                 print("No earthquake data found.")
@@ -170,6 +230,11 @@ async def test(ctx, *args):
 async def clear(ctx):
     await ctx.channel.purge()
     await ctx.send("Messages deleted!", delete_after=3)
+
+@bot.command()
+async def plot(ctx):
+    await ctx.send("Plot map")
+    await plotting()
 
 
 @bot.event
