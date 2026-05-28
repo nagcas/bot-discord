@@ -66,7 +66,23 @@ TOKEN_DISCORD=Inserisci il tuo token discord
 Nel server Discord:
 
 ```bash
-$earthquake 10
+$earthquake recent limit 10
+
+oppure
+
+$earthquake region Calabria limit 10
+
+oppure
+
+$earthquake today
+
+oppure 
+
+$earthquake last-week limit 10
+
+oppure
+
+$earthquake eventId <numero id>
 ```
 
 Dove 10 indica il numero di eventi sismici recenti da visualizzare.
