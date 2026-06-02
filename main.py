@@ -217,11 +217,10 @@ async def earthquake(ctx, *args):
                     else:
 
                         message = (
-                            f"Event id: {event_id} - "
-                            f"{magnitude}{magType} - "
-                            f"{place} - "
-                            f"{formatted_time_utc}"
-                            f"{formatted_time_rome}"
+                            f"🌍 Event id: {event_id} - "
+                            f"📏 {magnitude}{magType} - "
+                            f"📍 {place} - "
+                            f"🕒 {formatted_time_rome}"
                         )
 
                     await ctx.send(message)
