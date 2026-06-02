@@ -3,7 +3,8 @@ import discord
 from discord.ext import commands
 import difflib
 import requests
-from datetime import datetime
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -168,13 +169,26 @@ async def earthquake(ctx, *args):
                     magnitude = props.get("mag", "N/A")
                     magType = props.get("magType", "Unknown")
                     place = props.get("place", "Unknown")
-                    time = props.get("time")
+                    time_string = props.get("time")
                     
-                    if time:
-                        dt = datetime.fromisoformat(time)
-                        formatted_time = dt.strftime("%d/%m/%Y %H:%M")
+                    if time_string:
+                        try:
+                            utc_time = datetime.fromisoformat(
+                                time_string.replace("Z", "+00:00")
+                            ).replace(tzinfo=timezone.utc)
+
+                            rome_time = utc_time.astimezone(ZoneInfo("Europe/Rome"))
+
+                            formatted_time_utc = utc_time.strftime("%d/%m/%Y %H:%M:%S")
+                            formatted_time_rome = rome_time.strftime("%d/%m/%Y %H:%M:%S")
+
+                        except Exception as e:
+                            print("Time conversion error:", e)
+                            formatted_time_utc = "N/A"
+                            formatted_time_rome = "N/A"
                     else:
-                        formatted_time = "N/A"
+                        formatted_time_utc = "N/A"
+                        formatted_time_rome = "N/A"
                     
                     # EXTRA INFO FOR EVENTID
                     if mode == "eventId":
@@ -196,7 +210,8 @@ async def earthquake(ctx, *args):
                             f"📏 Magnitude: {magnitude}{magType}\n"
                             f"📌 Depth: {depth} km\n"
                             f"🧭 Coordinates: lat -> {lat}, lon -> {lon}\n"
-                            f"🕒 Time: {formatted_time}"
+                            f"🕒 Time (UTC): {formatted_time_utc}\n"
+                            f"🕒 Italian Time (UTC +02:00): {formatted_time_rome}\n"
                         )
 
                     else:
@@ -205,7 +220,8 @@ async def earthquake(ctx, *args):
                             f"Event id: {event_id} - "
                             f"{magnitude}{magType} - "
                             f"{place} - "
-                            f"{formatted_time}"
+                            f"{formatted_time_utc}"
+                            f"{formatted_time_rome}"
                         )
 
                     await ctx.send(message)
